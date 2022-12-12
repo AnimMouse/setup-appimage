@@ -1,0 +1,28 @@
+name: Setup AppImage
+description: Setup/Install an AppImage app for GitHub Actions
+branding:
+  icon: arrow-down-circle
+  color: blue
+inputs:
+  name:
+    description: Executable file name
+    required: true
+  url:
+    description: URL of AppImage app
+    required: true
+    
+runs:
+  using: composite
+  steps:
+    - name: Download AppImage app
+      shell: bash
+      working-directory: ${{ runner.temp }}
+      run: $GITHUB_ACTION_PATH/scripts/download.sh
+      env:
+        name: ${{ inputs.name }}
+        url: ${{ inputs.url }}
+        
+    - name: Install AppImage app on tool cache
+      uses: AnimMouse/tool-cache@v1
+      with:
+        folder_name: ${{ inputs.name }}
