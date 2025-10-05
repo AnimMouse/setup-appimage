@@ -1,11 +1,16 @@
 name: Test setup-appimage
 on:
   push:
+    branches:
+      - main
     paths:
       - action.yaml
       - scripts/**
       - .github/workflows/test.yaml
-      
+  schedule:
+    - cron: '7 11 1 * *'
+  workflow_dispatch:
+  
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -13,8 +18,9 @@ jobs:
       - name: Install the AppImage Hello World binary using setup-appimage
         uses: AnimMouse/setup-appimage@main
         with:
-          name: helloworld-appimage
+          filename: helloworld-appimage
           url: https://github.com/AnimMouse/hello-world-appimage/releases/download/v1/helloworld-appimage-x86_64.AppImage
+          cache_key: v1
           
       - name: Test if the AppImage Hello World binary is installed by setup-appimage
         run: helloworld-appimage
