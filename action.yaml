@@ -4,32 +4,52 @@ branding:
   icon: arrow-down-circle
   color: blue
 inputs:
-  name:
+  filename:
     description: Executable file name
     required: true
   url:
     description: URL of AppImage app
     required: true
+  cache_key:
+    description: Cache key for AppImage caching
+    required: true
     
 runs:
   using: composite
   steps:
+    - name: Restore AppImage app cache
+      id: cache
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ runner.tool_cache }}/${{ inputs.filename }}
+        key: ${{ inputs.filename }}-${{ inputs.cache_key }}-${{ runner.os }}
+        
     - name: Download AppImage app
+      if: '! steps.cache.outputs.cache-hit'
       shell: bash
       working-directory: ${{ runner.temp }}
       run: $GITHUB_ACTION_PATH/scripts/download.sh
       env:
-        name: ${{ inputs.name }}
+        filename: ${{ inputs.filename }}
         url: ${{ inputs.url }}
         
     - name: Extract AppImage app
+      if: '! steps.cache.outputs.cache-hit'
       shell: bash
       working-directory: ${{ runner.temp }}
       run: $GITHUB_ACTION_PATH/scripts/extract.sh
       env:
-        name: ${{ inputs.name }}
+        filename: ${{ inputs.filename }}
         
     - name: Install AppImage app on tool cache
       uses: AnimMouse/tool-cache@v1
       with:
-        folder_name: ${{ inputs.name }}
+        folder_name: ${{ inputs.filename }}
+        cache_hit: ${{ steps.cache.outputs.cache-hit }}
+        
+    - name: Save AppImage app cache
+      if: '! steps.cache.outputs.cache-hit'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ runner.tool_cache }}/${{ inputs.filename }}
+        key: ${{ inputs.filename }}-${{ inputs.cache_key }}-${{ runner.os }}
